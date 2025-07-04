@@ -1,0 +1,11 @@
+# 後端項目依賴項（Python）
+fastapi>=0.68.0
+sqlalchemy>=1.4.0
+pydantic-settings>=2.0.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+uvicorn>=0.15.0
+
+# 先決條件
+python>=3.8
+pip>=20.0

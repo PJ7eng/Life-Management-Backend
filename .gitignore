@@ -1,10 +1,37 @@
-# Ignore Python cache and virtual environment
+# Python 相關文件
 __pycache__/
-venv/
 *.pyc
 *.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+
+# 虛擬環境
+venv/
+env/
+
+# 環境變量文件
 .env
-# Ignore IDE and system files
+.env.local
+.env.development
+.env.test
+.env.production
+
+# SQLite 數據庫
+lifecursor.db
+
+# 日誌文件
+*.log
+logs/
+
+# IDE 和編輯器文件
 .idea/
-.vscode/
-*.log 
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# 系統文件
+.DS_Store
+Thumbs.db
+desktop.ini
