@@ -3,6 +3,7 @@ import models
 import schemas
 from datetime import datetime, timedelta
 from passlib.context import CryptContext
+from typing import List
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -104,7 +105,7 @@ def create_memo(db: Session, memo: schemas.MemoCreate, user_id: int):
 def get_user_memos(db: Session, user_id: int):
     return db.query(models.Memo).filter(models.Memo.user_id == user_id).all()
 
-def delete_memos(db: Session, memo_ids: list[int], user_id: int):
+def delete_memos(db: Session, memo_ids: List[int], user_id: int):
     result = db.query(models.Memo).filter(
         models.Memo.id.in_(memo_ids),
         models.Memo.user_id == user_id
