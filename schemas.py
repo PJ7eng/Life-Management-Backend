@@ -23,6 +23,11 @@ class Token(BaseModel):
 class TokenData(BaseModel):
     username: str
 
+class UpdateUsernameResponse(BaseModel):
+    user: User
+    access_token: str
+    token_type: str
+
 class TaskBase(BaseModel):
     title: str
     start: datetime

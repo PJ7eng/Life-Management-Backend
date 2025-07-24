@@ -32,6 +32,24 @@ def authenticate_user(db: Session, username: str, password: str):
         return False
     return user
 
+def update_username(db: Session, user_id: int, new_username: str):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        db_user.username = new_username
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return None
+
+def update_password(db: Session, user_id: int, new_password: str):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if db_user:
+        db_user.password_hash = pwd_context.hash(new_password)
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return None
+
 def create_task(db: Session, task: schemas.TaskCreate, user_id: int):
     db_task = models.Task(**task.dict(), user_id=user_id)
     db.add(db_task)

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Body
+from fastapi import FastAPI, Depends, HTTPException, status, Body, Security
 from fastapi.security import OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from typing import List
@@ -67,6 +67,38 @@ def logout(token: str = Depends(auth.oauth2_scheme), db: Session = Depends(get_d
 def read_users_me(current_user: schemas.User = Depends(auth.get_current_user)):
     return current_user
 
+@app.put("/api/auth/update_username", response_model=schemas.UpdateUsernameResponse)
+def update_username(
+    new_username: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: schemas.User = Depends(auth.get_current_user)
+):
+    # 檢查用戶名是否已存在
+    existing_user = crud.get_user_by_username(db, username=new_username)
+    if existing_user and existing_user.id != current_user.id:
+        raise HTTPException(
+            status_code=400,
+            detail="Username already taken"
+        )
+    
+    # 更新用戶名
+    db_user = crud.update_username(db, user_id=current_user.id, new_username=new_username)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # 生成新的JWT token，包含更新的用户名
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = auth.create_access_token(
+        data={"sub": db_user.username}, expires_delta=access_token_expires
+    )
+    
+    # 返回用户信息和新的token
+    return {
+        "user": db_user,
+        "access_token": access_token,
+        "token_type": "bearer"
+    }
+    
 # 待办事项API
 @app.post("/api/tasks", response_model=schemas.Task)
 def create_task(task: schemas.TaskCreate, db: Session = Depends(get_db), 
@@ -125,6 +157,27 @@ def update_memo(memo_id: int, memo: schemas.MemoCreate, db: Session = Depends(ge
     if updated_memo is None:
         raise HTTPException(status_code=404, detail="Memo not found")
     return updated_memo
+
+@app.post("/api/auth/verify_password")
+def verify_password(
+    password: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    if not crud.verify_password(password, current_user.password_hash):
+        raise HTTPException(status_code=401, detail="Incorrect password")
+    return {"message": "Password verified"}
+
+@app.post("/api/auth/change_password")
+def change_password(
+    new_password: str = Body(..., embed=True),
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(auth.get_current_user)
+):
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password too short")
+    crud.update_password(db, user_id=current_user.id, new_password=new_password)
+    return {"message": "Password changed successfully"}
 
 # 健康检查
 @app.get("/")
